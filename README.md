@@ -10,7 +10,7 @@ To start (assumes you have conda):
   * you should now have a directory that has './data/pairedData/.'
 * run 'python Analysis.py'
 
-## Data Files:\
+## Data Files:
 Element_name.txt
 - A list of the chromatin locations. Shape = 184665, 1 
 
