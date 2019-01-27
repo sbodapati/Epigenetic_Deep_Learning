@@ -15,4 +15,7 @@ gene_ms.txt
 - values = protein expression level
 
 RE_TG.txt
-- unclear 
+- unclear, appears to be some mapping of chromatin position to gene (1 to many)
+
+sample_201_new
+- list of all 201 cell types 
