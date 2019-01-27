@@ -1,0 +1,5 @@
+name: deeplearning
+channels:
+  - defaults
+prefix: /Users/sbodapati/miniconda2/envs/deeplearning
+
