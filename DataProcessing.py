@@ -5,6 +5,8 @@ import pickle
 
 
 def readEpigeneticDataFiles():
+    print('starting to read raw data files')
+
     # A list of the chromatin locations. Shape = 184665, 1
     index_names = pd.read_csv('./data/pairedData/human/Element_name.txt', header=None)
     index_names = index_names.rename(columns={0: "chrom_position"})
@@ -34,4 +36,5 @@ def readEpigeneticDataFiles():
     # print(gene_ms.shape)
 
     pickle.dump((data_df, gene_ms, index_names), open( './pickle/raw_data_files.p', "wb" ))
+    print('finished creating raw data pickle files')
 
