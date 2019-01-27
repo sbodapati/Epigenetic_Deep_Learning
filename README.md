@@ -6,6 +6,9 @@ To start (assumes you have conda), run 'conda env create -f environment.yml' to 
 After running the above command once, you can start the environment with 'source activate deeplearning'
 
 Data Files:
+Element_name.txt
+- A list of the chromatin locations. Shape = 184665, 1 
+
 Element_opn.txt 
 - Chromatin openness data. Index = Chromatin position. Columns = Cell Types. Shape = 184665, 201
 - values = Measure of Chromatin openness
