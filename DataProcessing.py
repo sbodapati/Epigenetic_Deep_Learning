@@ -48,30 +48,40 @@ def ReadGeneDistanceFile():
 
 def ConvertGeneDistanceFile(data_df, distanceFile, gene_ms, numFeatures, maxDistance):
 
-    # print(data_df.head())
-    # l = data_df.index.values
-    # l = [i.split('_',2) for i in l]
-    # chrom = [i[0] for i in l]
-    # start = [i[1] for i in l]
-    # end = [i[2] for i in l]
 
     geneList= gene_ms.index.values
     distanceFile['naming_conv'] = distanceFile['chrom'] + '_' + distanceFile['regionStart'].map(str) + '_' + distanceFile['regionEnd'].map(str)
-    indexNamesX = np.arange(1,numFeatures+1,1)
-    indexNamesY = ['expression']
+    indexNamesX = np.arange(0,numFeatures,1)
+    indexNamesY = [0]
     finalX = pd.DataFrame(index=indexNamesX)
+    finalX.index = indexNamesX
     finalY = pd.DataFrame(index=indexNamesY)
+    finalY.index = [0]
+    print(finalX)
+    print(finalY)
 
-    for i in range(1): #geneList
+    for i in range(len(geneList)):
         gene = geneList[i]
         geneDistance= distanceFile[(distanceFile.loc[:, 'gene'] == gene) & (distanceFile.loc[:, 'gene2regionDistance']<maxDistance)]
         if geneDistance.shape[0] > numFeatures:
             geneDistance.sort_values(by='gene2regionDistance', inplace=True)
-            tempX = data_df[data_df.index.isin(geneDistance.iloc[0:numFeatures,:]['naming_conv'])].reset_index()
-            print(tempX.head())
-            
-            # print(gene_ms[gene_ms.index.isin([gene])].set_index(indexNamesY ))
+            tempX = data_df[data_df.index.isin(geneDistance.iloc[0:numFeatures,:]['naming_conv'])].reset_index().drop(columns=['chrom_pos'])
+            cols = list(tempX.columns.values)
+            cols = [gene + '_' + str(i) for i in cols]
+            # print(cols)
+            tempX.columns = cols
+            # print(tempX)
+            tempY = gene_ms[gene_ms.index.isin([gene])].reset_index().drop(columns=['gene'])
+            tempY.columns = cols
+            finalX = finalX.merge(tempX,left_index=True, right_index=True)
+            finalY = finalY.merge(tempY, left_index=True, right_index=True)
+        if (i%100 == 0):
+            print(i)
 
+    print(finalX.shape)
+    print(finalY.shape)
+
+    pickle.dump((finalX,finalY), open( './pickle/FinalData_%d_%d.p' %(numFeatures,maxDistance), "wb" ))
 
 
 
