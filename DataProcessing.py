@@ -57,32 +57,33 @@ def ConvertGeneDistanceFile(data_df, distanceFile, gene_ms, numFeatures, maxDist
     finalX.index = indexNamesX
     finalY = pd.DataFrame(index=indexNamesY)
     finalY.index = [0]
-    print(finalX)
-    print(finalY)
 
     for i in range(len(geneList)):
         gene = geneList[i]
+        # isolate the chromatin locations that are near the gene of interest and less than maxDistance away.
         geneDistance= distanceFile[(distanceFile.loc[:, 'gene'] == gene) & (distanceFile.loc[:, 'gene2regionDistance']<maxDistance)]
+        # Ensure that the gene has the minimum number of features needed
         if geneDistance.shape[0] > numFeatures:
             geneDistance.sort_values(by='gene2regionDistance', inplace=True)
+            # get the first numFeatures chromatin positions
             tempX = data_df[data_df.index.isin(geneDistance.iloc[0:numFeatures,:]['naming_conv'])].reset_index().drop(columns=['chrom_pos'])
             cols = list(tempX.columns.values)
             cols = [gene + '_' + str(i) for i in cols]
-            # print(cols)
             tempX.columns = cols
-            # print(tempX)
             tempY = gene_ms[gene_ms.index.isin([gene])].reset_index().drop(columns=['gene'])
             tempY.columns = cols
             finalX = finalX.merge(tempX,left_index=True, right_index=True)
             finalY = finalY.merge(tempY, left_index=True, right_index=True)
         if (i%100 == 0):
-            print(i)
+            print('%d genes completed' % i)
 
     print(finalX.shape)
     print(finalY.shape)
 
     pickle.dump((finalX,finalY), open( './pickle/FinalData_%d_%d.p' %(numFeatures,maxDistance), "wb" ))
 
+    print('finished converting distance file to X and Y matricies')
+    return
 
 
     # print(data_df.head())
