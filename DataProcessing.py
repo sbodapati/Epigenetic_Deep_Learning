@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 import pickle
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 
-def readEpigeneticDataFiles():
+def ReadEpigeneticDataFiles():
     print('starting to read raw data files')
 
     # A list of the chromatin locations. Shape = 184665, 1
@@ -37,4 +39,78 @@ def readEpigeneticDataFiles():
 
     pickle.dump((data_df, gene_ms, index_names), open( './pickle/raw_data_files.p', "wb" ))
     print('finished creating raw data pickle files')
+
+def ReadGeneDistanceFile():
+    print('starting to read distance file')
+    distanceFile = pd.read_csv('./data/gene2regionDistances.txt', sep = '\t', header=0)
+    pickle.dump(distanceFile, open( './pickle/distance_file.p', "wb" ))
+    print('finished reading distance file')
+
+def ConvertGeneDistanceFile(data_df, distanceFile, gene_ms, numFeatures, maxDistance):
+
+
+    geneList= gene_ms.index.values
+    distanceFile['naming_conv'] = distanceFile['chrom'] + '_' + distanceFile['regionStart'].map(str) + '_' + distanceFile['regionEnd'].map(str)
+    indexNamesX = np.arange(0,numFeatures,1)
+    indexNamesY = [0]
+    finalX = pd.DataFrame(index=indexNamesX)
+    finalX.index = indexNamesX
+    finalY = pd.DataFrame(index=indexNamesY)
+    finalY.index = [0]
+
+    for i in range(5): #len(geneList)
+        gene = geneList[i]
+        # isolate the chromatin locations that are near the gene of interest and less than maxDistance away.
+        geneDistance= distanceFile[(distanceFile.loc[:, 'gene'] == gene) & (distanceFile.loc[:, 'gene2regionDistance']<maxDistance)]
+        # Ensure that the gene has the minimum number of features needed
+        if geneDistance.shape[0] > numFeatures:
+            geneDistance.sort_values(by='gene2regionDistance', inplace=True)
+            # get the first numFeatures chromatin positions
+            tempX = data_df[data_df.index.isin(geneDistance.iloc[0:numFeatures,:]['naming_conv'])].reset_index().drop(columns=['chrom_pos'])
+            cols = list(tempX.columns.values)
+            cols = [gene + '_' + str(i) for i in cols]
+            tempX.columns = cols
+            tempY = gene_ms[gene_ms.index.isin([gene])].reset_index().drop(columns=['gene'])
+            tempY.columns = cols
+            finalX = finalX.merge(tempX,left_index=True, right_index=True)
+            finalY = finalY.merge(tempY, left_index=True, right_index=True)
+            print(finalX.shape)
+            print(finalY.shape)
+        if (i%100 == 0):
+            print('%d genes completed' % i)
+
+    print(finalX.shape)
+    print(finalY.shape)
+
+    pickle.dump((finalX,finalY), open( './pickle/FinalData_%d_%d.p' %(numFeatures,maxDistance), "wb" ))
+
+    print('finished converting distance file to X and Y matricies')
+    return
+
+
+    # print(data_df.head())
+    # print(distanceFile.head())
+    # print(gene_ms.head())
+
+
+    # distanceHist = set()
+    # print(distanceFile.head())
+    #
+    # sns.distplot(distanceFile.groupby(['gene'])['ones'].sum())
+    # plt.show()
+    # for gene in geneList:
+    #     geneDistance= distanceFile[distanceFile.loc[:,'gene'] == gene]
+    #     distanceHist.add(geneDistance.shape[0])
+
+    # sns.distplot(distanceHist)
+    # plt.show()
+    #
+    # print(start[0:5])
+    # print(end[0:5])
+    # print(distanceFile.head())
+    # print(distanceFile[ (distanceFile.loc[:,'regionStart'] == int(start[0])) & (distanceFile.loc[:,'regionEnd'] == int(end[0]))])
+    # print(data_df.head())
+    # LOXL4 = distanceFile[distanceFile.loc[:,'gene'] == 'LOXL4']
+    # print(LOXL4.head())
+    # print(LOXL4.sort_index(by = 'gene2regionDistance'))
 
