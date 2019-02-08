@@ -58,7 +58,7 @@ def ConvertGeneDistanceFile(data_df, distanceFile, gene_ms, numFeatures, maxDist
     finalY = pd.DataFrame(index=indexNamesY)
     finalY.index = [0]
 
-    for i in range(len(geneList)):
+    for i in range(5): #len(geneList)
         gene = geneList[i]
         # isolate the chromatin locations that are near the gene of interest and less than maxDistance away.
         geneDistance= distanceFile[(distanceFile.loc[:, 'gene'] == gene) & (distanceFile.loc[:, 'gene2regionDistance']<maxDistance)]
@@ -74,6 +74,8 @@ def ConvertGeneDistanceFile(data_df, distanceFile, gene_ms, numFeatures, maxDist
             tempY.columns = cols
             finalX = finalX.merge(tempX,left_index=True, right_index=True)
             finalY = finalY.merge(tempY, left_index=True, right_index=True)
+            print(finalX.shape)
+            print(finalY.shape)
         if (i%100 == 0):
             print('%d genes completed' % i)
 
