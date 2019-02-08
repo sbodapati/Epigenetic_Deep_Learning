@@ -33,24 +33,30 @@ for i in range(gene_expression.shape[0]):  # how to access rownames directly?
   print("i = ", i, file = sys.stderr)
   gene = genes[i]
   d = gene2regionDistances[(gene2regionDistances['gene'] == gene)] 
-  if d.shape[0] > 0:
-    TSS  = d['TSS'].iloc[0]
-    strand = 1 if d['strand'].iloc[0] == '+' else -1
+  if d.shape[0] > 0: # make sure there's at least one region
+    TSS  = d['TSS'].iloc[0] # TSS is always the same, use first
+    strand = 1 if d['strand'].iloc[0] == '+' else -1 # convert strand to value
     for j in range(0, 1000):
       #print("j = ", j, file = sys.stderr)
+      # lowerLim and upperLim of bin depend on strand
       lowerLim = TSS + strand*1000*j if strand > 0 else TSS + strand*1000*(j + 1)  
       upperLim = TSS + strand*1000*(j + 1) if strand > 0 else TSS + strand*1000*j
-      regions = d[numpy.logical_and(d['regionEnd'] > lowerLim, d['regionEnd'] < upperLim)]
+      # get regions in the bin
+      regions = d[numpy.logical_and(d['regionEnd'] > lowerLim, d['regionEnd'] < upperLim)] 
+      # o is a place-holder for openness in region
       o = numpy.zeros((201, ))
       for r in range(regions.shape[0]):  # no iteration if regions.shape[0] == 0
         o_r = openness_data.loc[regions['regionName'].iloc[r], : ]
         o_r = o_r.values
         o_r.reshape(201, )
+        # normalize by length of overlap
         overlap = (min(upperLim, regions['regionEnd'].iloc[r]) - max(lowerLim, regions['regionStart'].iloc[r]))/1000.0
         o += o_r.reshape(201,)*overlap
       binnedOpenness[i, j, :] = o
 
+    
     for j in range(0, 1000):
+      # other direction
       #print("j = ", j + 1000, file = sys.stderr)
       lowerLim = TSS - strand*1000*j if strand < 0 else TSS - strand*1000*(j + 1)
       upperLim = TSS - strand*1000*(j + 1) if strand < 0 else TSS - strand*1000*j
@@ -62,7 +68,8 @@ for i in range(gene_expression.shape[0]):  # how to access rownames directly?
         o_r.reshape(201, )
         overlap =(min(upperLim, regions['regionEnd'].iloc[r]) - max(lowerLim, regions['regionStart'].iloc[r]))/1000.0
         o += o_r*overlap
-      binnedOpenness[i, j, :] = o
+      # 1000 for other direction
+      binnedOpenness[i, j + 1000, :] = o
 
 
 import pickle
