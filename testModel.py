@@ -43,7 +43,7 @@ class Model(nn.Module):
 			out = self.forward(out, self.layers[i], self.activations[i])
 
 		out = self.out(out)
-		print(out)
+		# print(out)
 		return out
 		
 	def forward(self, X, layer, activation):
