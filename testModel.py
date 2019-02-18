@@ -43,7 +43,7 @@ class Model(nn.Module):
 			out = self.forward(out, self.layers[i], self.activations[i])
 
 		out = self.out(out)
-		# print(out)
+		print(out)
 		return out
 		
 	def forward(self, X, layer, activation):
@@ -55,7 +55,7 @@ class Model(nn.Module):
 
 def run_training(X, Y, num_epochs = 500):
 	model = Model(input_size=input_size, hidden_size=2000, output_size=output_size)
-	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=0.001, weight_decay=0, amsgrad=False)
+	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0, amsgrad=False)
 	loss = nn.MSELoss()
 	for epoch in range(num_epochs):
 		optimizer.zero_grad()
