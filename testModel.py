@@ -53,12 +53,12 @@ class Model(nn.Module):
 
 
 
-def run_training(X, Y, num_epochs = 500):
+def run_training(X, Y, num_epochs = 5):
 	model = Model(input_size=input_size, hidden_size=2000, output_size=output_size)
 	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0, amsgrad=False)
 	loss = nn.MSELoss()
 	error_array = np.zeros(num_epochs)
-	
+
 	for epoch in range(num_epochs):
 		optimizer.zero_grad()
 		Y_hat = model.run_all_forward(X)
@@ -69,6 +69,12 @@ def run_training(X, Y, num_epochs = 500):
 		error_array[epoch] = error
 
 	np.savetxt("errorVsEpoch.csv", error_array, delimiter=",")
+	torch.save(model.state_dict(), 'last_trained_model')
+
+	# below is code to load.
+	# the_model = TheModelClass(*args, **kwargs)
+	# the_model.load_state_dict(torch.load(PATH))
+
 
 print("Beginning training")
 
