@@ -27,23 +27,35 @@ class Model(nn.Module):
 		self.hidden2 = nn.Linear(hidden_size, hidden_size)
 		self.out = nn.Linear(hidden_size, output_size)
 
+		torch.nn.init.xavier_uniform_(self.input.weight)
+		torch.nn.init.xavier_uniform_(self.hidden1.weight)
+		torch.nn.init.xavier_uniform_(self.hidden2.weight)
+		torch.nn.init.xavier_uniform_(self.out.weight)
+
 		# self.hidden_layers = [nn.Linear(hidden_size, hidden_size) for i in num_hidden_layers]
 		self.layers = nn.ModuleList([self.input, self.hidden1, self.hidden2, self.out])
 		self.activations = [nn.ReLU() for i in range(len(self.layers))]
 
+
 	def run_all_forward(self, X):
 		out = X
-		for i in range(len(self.layers)):
+		for i in range(len(self.layers)-1):
 			out = self.forward(out, self.layers[i], self.activations[i])
-			return out
+
+		out = self.out(out)
+		# print(out)
+		return out
 		
 	def forward(self, X, layer, activation):
 		out = layer(X)
 		return activation(out)
 
+
+
+
 def run_training(X, Y, num_epochs = 500):
 	model = Model(input_size=input_size, hidden_size=2000, output_size=output_size)
-	optimizer = optim.SGD(model.parameters(), lr = 0.01, momentum=0.9)
+	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=0.001, weight_decay=0, amsgrad=False)
 	loss = nn.MSELoss()
 	for epoch in range(num_epochs):
 		optimizer.zero_grad()
