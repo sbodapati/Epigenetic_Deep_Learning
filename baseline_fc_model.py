@@ -54,6 +54,7 @@ class Model(nn.Module):
 		for layer, nonlinearity in zip(self.linear_layers, self.nonlinearities):
 			output = layer(X)
 			output = nonlinearity(output)
+		return output
 
 
 
@@ -79,7 +80,7 @@ class Trainer(object):
 		self.learning_rate = learning_rate
 		self.momentum = momentum
 
-		## TODO: insert loss function here
+		## TODO: insert loss function here (using L2)
 		self.loss_function = lambda y, y_hat: torch.sum((y - y_hat) ** 2)
 		self.optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=self.momentum)
 		self.save_freq = save_freq
@@ -156,7 +157,7 @@ def main():
 	momentum = 0.9
 	init_weight_range = [-1, 1]
 	mini_batch_size = 10
-	hidden_layer_size = 10
+	hidden_layer_size = 4
 	hidden_nonlinearity = "relu"
 
 	# results_from_runs = train
