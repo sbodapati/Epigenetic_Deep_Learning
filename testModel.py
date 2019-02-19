@@ -7,14 +7,21 @@ import torch.optim as optim
 print("Loading binned openness data")
 testBinnedOpennessReshaped = np.load("data/pairedData/human/testBinnedOpennessReshaped.npy")
 testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000, 201)) # original shape
+testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000*201))
+testBinnedOpennessReshaped_mean = (testBinnedOpennessReshaped - np.mean(testBinnedOpennessReshaped, axis=1)[:, np.newaxis])
+testBinnedOpennessReshaped = testBinnedOpennessReshaped_mean/(np.std(testBinnedOpennessReshaped, axis=1)[:, np.newaxis] + 10**-8)
+testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000, 201))
 testBinnedOpennessReshaped = np.swapaxes(testBinnedOpennessReshaped, 1, 2)
 testBinnedOpennessReshaped.shape # should be (200, 201, 2000)
 X = np.reshape(testBinnedOpennessReshaped, (200*201, 2000))
 
 print("Loading gene expression data")
 Y = np.genfromtxt("data/pairedData/human/testGeneExpression.txt", delimiter = '\t')
+
 epsilon = 10 ** -8
 Y = np.log(Y + epsilon)
+Y_mean = Y - np.mean(Y, axis=1)[:,np.newaxis]
+Y = Y_mean / (np.std(Y_mean, axis=1)[:,np.newaxis] + 10**-8)
 Y = np.reshape(Y, (200*201, 1))
 input_size = 2000 
 output_size = 1
@@ -53,9 +60,9 @@ class Model(nn.Module):
 
 
 
-def run_training(X, Y, num_epochs = 5):
+def run_training(X, Y, num_epochs = 500):
 	model = Model(input_size=input_size, hidden_size=2000, output_size=output_size)
-	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0, amsgrad=False)
+	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-3, weight_decay=0, amsgrad=False)
 	loss = nn.MSELoss()
 	error_array = np.zeros(num_epochs)
 
