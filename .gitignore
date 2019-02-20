@@ -1,3 +1,4 @@
 data/
 pickle/
 *.npy
+.DS_Store
