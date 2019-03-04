@@ -54,15 +54,14 @@ def get_training_data(X_path="data/pairedData/human/testBinnedOpennessReshaped.n
 
 
 class Model(nn.Module):
-	""" 4-layer neural network """
+	""" N-layer neural network """
 
 	def __init__(self, input_size, inputLayerArray):
 		"""Initializes model variables and layer weights in the model
 
 		Args:
 			input_size (int): size of input
-			hidden_size (int): number of hidden units in hidden layers
-			output_size (int): size of output
+			inputLayerArray (list of ints): each element specifies the number of neurons in a given layer.
 		"""
 		super(Model, self).__init__()
 
@@ -105,8 +104,11 @@ def run_training(X, Y, num_epochs = 50):
 		Y (torch.Tensor): target tensor
 		num_epochs (int): number of training epochs
 	"""
-	input_size = 2000 
-	inputLayerArray = [1000,100,1] #defines what the input of each layer should be. Make sure the last element is 1.
+	input_size = 2000
+
+	#defines what the input of each layer should be. Make sure the last element is 1.
+	inputLayerArray = [1000,100,1]
+
 	print("Loading model")
 	model = Model(input_size=input_size, inputLayerArray= inputLayerArray)
 	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0, amsgrad=False)
