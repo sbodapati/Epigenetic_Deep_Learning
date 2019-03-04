@@ -18,6 +18,11 @@ X = np.reshape(testBinnedOpennessReshaped, (200*201, 2000))
 print("Loading gene expression data")
 Y = np.genfromtxt("data/pairedData/human/testGeneExpression.txt", delimiter = '\t')
 
+
+#Linear Regression Baseline
+
+
+
 epsilon = 10 ** -8
 Y = np.log(Y + epsilon)
 Y_mean = Y - np.mean(Y, axis=1)[:,np.newaxis]
