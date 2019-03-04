@@ -20,9 +20,6 @@ Y = np.genfromtxt("data/pairedData/human/testGeneExpression.txt", delimiter = '\
 
 
 #Linear Regression Baseline
-
-
-
 epsilon = 10 ** -8
 Y = np.log(Y + epsilon)
 Y_mean = Y - np.mean(Y, axis=1)[:,np.newaxis]
@@ -59,7 +56,7 @@ def get_training_data(X_path="data/pairedData/human/testBinnedOpennessReshaped.n
 class Model(nn.Module):
 	""" 4-layer neural network """
 
-	def __init__(self, input_size, hidden_size, output_size):
+	def __init__(self, input_size, inputLayerArray):
 		"""Initializes model variables and layer weights in the model
 
 		Args:
@@ -68,19 +65,15 @@ class Model(nn.Module):
 			output_size (int): size of output
 		"""
 		super(Model, self).__init__()
-		self.input = nn.Linear(input_size, hidden_size)
-		self.hidden1 = nn.Linear(hidden_size, hidden_size)
-		self.hidden2 = nn.Linear(hidden_size, hidden_size)
-		self.out = nn.Linear(hidden_size, output_size)
 
-		torch.nn.init.xavier_uniform_(self.input.weight)
-		torch.nn.init.xavier_uniform_(self.hidden1.weight)
-		torch.nn.init.xavier_uniform_(self.hidden2.weight)
-		torch.nn.init.xavier_uniform_(self.out.weight)
+		self.model_layers = nn.ModuleList()
 
-		# self.hidden_layers = [nn.Linear(hidden_size, hidden_size) for i in num_hidden_layers]
-		self.layers = nn.ModuleList([self.input, self.hidden1, self.hidden2, self.out])
-		self.activations = [nn.ReLU() for i in range(len(self.layers))]
+		for i in range(len(inputLayerArray)):
+			self.model_layers.append(nn.Linear(input_size, inputLayerArray[i]))
+			torch.nn.init.xavier_uniform_(self.model_layers[i].weight)
+			input_size = inputLayerArray[i]
+
+		self.model_activations = [nn.ReLU() for i in range(len(self.model_layers)-1)]
 
 
 	def run_all_forward(self, X):
@@ -92,11 +85,9 @@ class Model(nn.Module):
 			out (torch.Tensor): output from model
 		"""
 		out = X
-		for i in range(len(self.layers)-1):
-			out = self.forward(out, self.layers[i], self.activations[i])
-
-		out = self.out(out)
-		# print(out)
+		for i in range(len(self.model_layers)-1):
+			out = self.forward(out, self.model_layers[i], self.model_activations[i])
+		out = self.model_layers[-1](out)
 		return out
 		
 	def forward(self, X, layer, activation):
@@ -115,10 +106,9 @@ def run_training(X, Y, num_epochs = 50):
 		num_epochs (int): number of training epochs
 	"""
 	input_size = 2000 
-	hidden_size = 2000
-	output_size = 1
+	inputLayerArray = [1000,100,1] #defines what the input of each layer should be. Make sure the last element is 1.
 	print("Loading model")
-	model = Model(input_size=input_size, hidden_size=hidden_size, output_size=output_size)
+	model = Model(input_size=input_size, inputLayerArray= inputLayerArray)
 	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0, amsgrad=False)
 	loss = nn.MSELoss()
 	error_array = np.zeros(num_epochs)
