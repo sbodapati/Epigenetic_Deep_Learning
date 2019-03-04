@@ -30,3 +30,13 @@ To start (assumes you have conda):
 
 ./data/gene2regionDistances.txt
 - list of all chromatin locations with the distance from a given gene.
+
+## Milestone
+Model files include:
+* `LR_baseline.py`
+* `testModel.py`
+
+Preprocessing files include:
+* `computeBinnedOpennes.py `
+* `DataProcessing.py`
+* `filterGenes.py`
