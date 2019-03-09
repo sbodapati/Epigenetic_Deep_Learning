@@ -3,6 +3,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+ff_name = "FullModel_Training_out.txt"
+with open(ff_name, "w") as ff:
+  print("opening FullModel_Training_out.txt", file = ff)
+
 # print("Loading binned openness data")
 # testBinnedOpennessReshaped = np.load("data/pairedData/human/testBinnedOpennessReshaped.npy")
 # testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000, 201)) # original shape
@@ -108,7 +112,7 @@ class Model(nn.Module):
 			out = self.forward(out, self.model_layers[i], self.model_activations[i])
 		out = self.model_layers[-1](out)
 		return out
-		
+
 	def forward(self, X, layer, activation):
 		out = layer(X)
 		return activation(out)
@@ -143,9 +147,10 @@ class DataLoader():
 		return
 
 	def Next(self):
-		print('#################################')
-		print('file index: %d'%self.file_index)
-		print('train index: %d'%self.train_index)
+		with open(ff_name, "a") as ff:
+			print('#################################', file = ff)
+			print('file index: %d'%self.file_index, file = ff)
+			print('train index: %d'%self.train_index, file = ff)
 
 		if self.dev:
 			data_X = np.load(self.X_path + 'Dev.npy')
@@ -197,7 +202,7 @@ class DataLoader():
 
 def run_training(num_epochs = 5000, batch_size=20000):
 	"""Runs training specified number of epochs using an Adam
-	optimizer and MSE loss. 
+	optimizer and MSE loss.
 
 	Args:
 		X (torch.Tensor): input tensor
@@ -214,14 +219,15 @@ def run_training(num_epochs = 5000, batch_size=20000):
 	#defines what the input of each layer should be. Make sure the last element is 1.
 	inputLayerArray = [1000,1000,1]
 
-	print("Loading model")
+	with open(ff_name, "a") as ff:
+		print("Loading model", file = ff)
 	data_loader = DataLoader(type='train', batch_size=batch_size)
 	model = Model(input_size=input_size, inputLayerArray= inputLayerArray)
 	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
 	loss = nn.MSELoss()
 	error_array = np.zeros(num_epochs)
 
-	print("Beginning training")
+
 	lastEpoch = data_loader.GetEpoch()
 	while data_loader.GetEpoch()<num_epochs:
 		optimizer.zero_grad()
@@ -246,7 +252,8 @@ def run_training(num_epochs = 5000, batch_size=20000):
 
 
 def main():
-	
+	with open(ff_name, "a") as ff:
+		print('starting', file = ff)
 	run_training()
 
 
