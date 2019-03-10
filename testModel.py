@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-ff_name = "FullModel_Training_out.txt"
+ff_name = "L1_Training_out.txt"
 with open(ff_name, "w") as ff:
   print("opening FullModel_Training_out.txt", file = ff)
 
@@ -195,6 +195,34 @@ class DataLoader():
 	def GetEpoch(self):
 		return self.epoch_num
 
+class L1_Model(nn.Module):
+	""" N-layer neural network """
+
+	def __init__(self, input_size):
+		"""Initializes model variables and layer weights in the model
+
+		Args:
+			input_size (int): size of input
+			inputLayerArray (list of ints): each element specifies the number of neurons in a given layer.
+		"""
+		super(L1_Model, self).__init__()
+
+
+		self.hidden = nn.Linear(input_size, 1)
+		nn.init.xavier_uniform_(self.hidden.weight)
+
+
+
+	def forward(self, X):
+		"""Runs input forward through all layers
+
+		Args:
+			X (torch.Tensor): input to model
+		Returns:
+			out (torch.Tensor): output from model
+		"""
+
+		return self.hidden(X)
 
 
 
@@ -239,7 +267,8 @@ def run_training(num_epochs = 5000, batch_size=20000):
 		error.backward()
 		optimizer.step()
 		if data_loader.GetEpoch() != lastEpoch:
-			print("Epoch %d: Loss is %f" % (data_loader.GetEpoch(), error))
+			with open(ff_name, "a") as ff:
+				print("Epoch %d: Loss is %f" % (data_loader.GetEpoch(), error), file = ff)
 			error_array[data_loader.GetEpoch()] = error
 			lastEpoch = data_loader.GetEpoch()
 
@@ -250,11 +279,59 @@ def run_training(num_epochs = 5000, batch_size=20000):
 	# the_model = TheModelClass(*args, **kwargs)
 	# the_model.load_state_dict(torch.load(PATH))
 
+def run_L1_training(num_epochs = 5000, batch_size=1000):
+	"""Runs training specified number of epochs using an Adam
+	optimizer and MSE loss.
+
+	Args:
+		X (torch.Tensor): input tensor
+		Y (torch.Tensor): target tensor
+		num_epochs (int): number of training epochs
+	"""
+
+	input_size = 2000
+	#defines what the input of each layer should be. Make sure the last element is 1.
+
+	with open(ff_name, "a") as ff:
+		print("Loading model", file = ff)
+	data_loader = DataLoader(type='train', batch_size=batch_size)
+	model = L1_Model(input_size=input_size)
+	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
+	loss = nn.MSELoss()
+	error_array = np.zeros(num_epochs)
+
+
+	lastEpoch = data_loader.GetEpoch()
+	while data_loader.GetEpoch()<num_epochs:
+		optimizer.zero_grad()
+		X,Y = data_loader.Next()
+		X = torch.from_numpy(X).float()
+		Y = torch.from_numpy(Y).float()
+		Y_hat = model.forward(X)
+		error = loss(Y_hat, Y)
+		regularization_loss = 0
+		for param in model.parameters():
+			regularization_loss += torch.sum(torch.abs(param))
+		error = error + regularization_loss
+		error.backward()
+		optimizer.step()
+		if data_loader.GetEpoch() != lastEpoch:
+			with open(ff_name, "a") as ff:
+				print("Epoch %d: Loss is %f" % (data_loader.GetEpoch(), error), file = ff)
+			error_array[data_loader.GetEpoch()] = error
+			lastEpoch = data_loader.GetEpoch()
+
+	np.savetxt("L1_errorVsEpoch_onFullDataset.csv", error_array, delimiter=",")
+	torch.save(model.state_dict(), 'L1_last_trained_model_onFullDataset')
+
+
+
 
 def main():
 	with open(ff_name, "a") as ff:
 		print('starting', file = ff)
-	run_training()
+	# run_training()
+	run_L1_training()
 
 
 if __name__ == "__main__":
