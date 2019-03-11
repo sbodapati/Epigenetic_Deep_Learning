@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-ff_name = "L1_Training_out.txt"
+ff_name = "L1Reg_Training_out.txt"
 with open(ff_name, "w") as ff:
   print("opening FullModel_Training_out.txt", file = ff)
 
@@ -147,10 +147,10 @@ class DataLoader():
 		return
 
 	def Next(self):
-		with open(ff_name, "a") as ff:
-			print('#################################', file = ff)
-			print('file index: %d'%self.file_index, file = ff)
-			print('train index: %d'%self.train_index, file = ff)
+		# with open(ff_name, "a") as ff:
+		# 	print('#################################', file = ff)
+		# 	print('file index: %d'%self.file_index, file = ff)
+		# 	print('train index: %d'%self.train_index, file = ff)
 
 		if self.dev:
 			data_X = np.load(self.X_path + 'Dev.npy')
@@ -224,11 +224,15 @@ class L1_Model(nn.Module):
 
 		return self.hidden(X)
 
+	
+	def getWeight(self):
+		print(self.hidden.weight)
+		return()
 
 
 
 
-def run_training(num_epochs = 5000, batch_size=20000):
+def run_training(num_epochs = 5000, batch_size=10000):
 	"""Runs training specified number of epochs using an Adam
 	optimizer and MSE loss.
 
@@ -245,7 +249,7 @@ def run_training(num_epochs = 5000, batch_size=20000):
 	input_size = 2000
 
 	#defines what the input of each layer should be. Make sure the last element is 1.
-	inputLayerArray = [1000,1000,1]
+	inputLayerArray = [1000,1000,1000,1]
 
 	with open(ff_name, "a") as ff:
 		print("Loading model", file = ff)
@@ -271,6 +275,8 @@ def run_training(num_epochs = 5000, batch_size=20000):
 				print("Epoch %d: Loss is %f" % (data_loader.GetEpoch(), error), file = ff)
 			error_array[data_loader.GetEpoch()] = error
 			lastEpoch = data_loader.GetEpoch()
+			np.savetxt("errorVsEpoch_onFullDataset.csv", error_array, delimiter=",")
+			torch.save(model.state_dict(), 'last_trained_model_onFullDataset')
 
 	np.savetxt("errorVsEpoch_onFullDataset.csv", error_array, delimiter=",")
 	torch.save(model.state_dict(), 'last_trained_model_onFullDataset')
@@ -311,13 +317,15 @@ def run_L1_training(num_epochs = 5000, batch_size=1000):
 		error = loss(Y_hat, Y)
 		regularization_loss = 0
 		for param in model.parameters():
-			regularization_loss += torch.sum(torch.abs(param))
+			regularization_loss = regularization_loss + torch.sum(torch.abs(param))
 		error = error + regularization_loss
 		error.backward()
 		optimizer.step()
 		if data_loader.GetEpoch() != lastEpoch:
 			with open(ff_name, "a") as ff:
 				print("Epoch %d: Loss is %f" % (data_loader.GetEpoch(), error), file = ff)
+				print(model.getWeight(), file = ff)
+				print(regularization_loss, file = ff)
 			error_array[data_loader.GetEpoch()] = error
 			lastEpoch = data_loader.GetEpoch()
 
