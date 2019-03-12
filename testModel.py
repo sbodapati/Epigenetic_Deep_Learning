@@ -3,9 +3,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-ff_name = "Full_Training_bs_10000_5000epochs_out.txt"
+ff_name = "Dev_Error_Full_Training_bs_10000_5000epochs_out.txt"
+model_path = "last_trained_model_onFullDataset"
 with open(ff_name, "w") as ff:
   print("opening FullModel_Training_out.txt", file = ff)
+
+#defines what the input of each layer should be. Make sure the last element is 1.
+inputLayerArray = [1000,1000,1000,1]
 
 # print("Loading binned openness data")
 # testBinnedOpennessReshaped = np.load("data/pairedData/human/testBinnedOpennessReshaped.npy")
@@ -131,7 +135,7 @@ class DataLoader():
 	batch_size = None
 	epoch_num = 0
 
-	def __init__(self, type, batch_size):
+	def __init__(self, type, batch_size=10000):
 		if type == 'dev':
 			self.dev = True
 		if type == 'test':
@@ -245,7 +249,7 @@ def run_training(num_epochs = 5000, batch_size=10000):
 	input_size = 2000
 
 	#defines what the input of each layer should be. Make sure the last element is 1.
-	inputLayerArray = [1000,1000,1000,1]
+	# inputLayerArray = [1000,1000,1000,1]
 
 	with open(ff_name, "a") as ff:
 		print("Loading model", file = ff)
@@ -326,6 +330,21 @@ def run_L1_training(num_epochs = 5000, batch_size=1000):
 	np.savetxt("L1_errorVsEpoch_onFullDataset.csv", error_array, delimiter=",")
 	torch.save(model.state_dict(), 'L1_last_trained_model_onFullDataset')
 
+def testModel():
+	input_size = 2000
+	model = Model(input_size=input_size, inputLayerArray= inputLayerArray)
+	model.load_state_dict(torch.load(model_path))
+	model.eval()
+
+	loss = nn.MSELoss()
+	data_loader = DataLoader(type='dev')
+	X,Y = data_loader.Next()
+	X = torch.from_numpy(X).float()
+	Y = torch.from_numpy(Y).float()
+	Y_hat = model.forward(X)
+	error = loss(Y_hat, Y)
+	with open(ff_name, "a") as ff:
+		print("Dev Loss MSE Loss is %f" %error, file = ff)
 
 
 
@@ -334,6 +353,7 @@ def main():
 		print('starting', file = ff)
 	# run_training()
 	# run_L1_training()
+	testModel()
 
 
 if __name__ == "__main__":
