@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-ff_name = "L1Reg_Training_out.txt"
+ff_name = "Full_Training_bs_10000_5000epochs_out.txt"
 with open(ff_name, "w") as ff:
   print("opening FullModel_Training_out.txt", file = ff)
 
@@ -33,6 +33,7 @@ with open(ff_name, "w") as ff:
 
 def get_training_data(X_path="data/pairedData/human/testBinnedOpennessReshaped.npy",
 						Y_path="data/pairedData/human/testGeneExpression.txt"):
+
 	"""Loads openness and expression training data for the first 201 samples
 
 	Args:
@@ -212,7 +213,6 @@ class L1_Model(nn.Module):
 		nn.init.xavier_uniform_(self.hidden.weight)
 
 
-
 	def forward(self, X):
 		"""Runs input forward through all layers
 
@@ -224,10 +224,6 @@ class L1_Model(nn.Module):
 
 		return self.hidden(X)
 
-	
-	def getWeight(self):
-		print(self.hidden.weight)
-		return()
 
 
 
@@ -317,15 +313,13 @@ def run_L1_training(num_epochs = 5000, batch_size=1000):
 		error = loss(Y_hat, Y)
 		regularization_loss = 0
 		for param in model.parameters():
-			regularization_loss = regularization_loss + torch.sum(torch.abs(param))
+			regularization_loss += torch.sum(torch.abs(param))
 		error = error + regularization_loss
 		error.backward()
 		optimizer.step()
 		if data_loader.GetEpoch() != lastEpoch:
 			with open(ff_name, "a") as ff:
 				print("Epoch %d: Loss is %f" % (data_loader.GetEpoch(), error), file = ff)
-				print(model.getWeight(), file = ff)
-				print(regularization_loss, file = ff)
 			error_array[data_loader.GetEpoch()] = error
 			lastEpoch = data_loader.GetEpoch()
 
@@ -339,7 +333,7 @@ def main():
 	with open(ff_name, "a") as ff:
 		print('starting', file = ff)
 	# run_training()
-	run_L1_training()
+	# run_L1_training()
 
 
 if __name__ == "__main__":
