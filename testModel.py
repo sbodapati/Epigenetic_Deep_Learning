@@ -2,89 +2,22 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import sys
 
-ff_name = "Dev_Error_Full_Training_bs_10000_5000epochs_out.txt"
-model_path = "last_trained_model_onFullDataset"
+
+
+# model_path = "last_trained_model_onFullDataset"
+
+ff_name = "Dev_Error_Full_Training_bs_10000_300epochs_out.txt"
 with open(ff_name, "w") as ff:
-  print("opening FullModel_Training_out.txt", file = ff)
+	print("opening FullModel_Training_out.txt", file = ff)
 
 #defines what the input of each layer should be. Make sure the last element is 1.
 inputLayerArray = [1000,1000,1000,1]
-
-# print("Loading binned openness data")
-# testBinnedOpennessReshaped = np.load("data/pairedData/human/testBinnedOpennessReshaped.npy")
-# testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000, 201)) # original shape
-# testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000*201))
-# testBinnedOpennessReshaped_mean = (testBinnedOpennessReshaped - np.mean(testBinnedOpennessReshaped, axis=1)[:, np.newaxis])
-# testBinnedOpennessReshaped = testBinnedOpennessReshaped_mean/(np.std(testBinnedOpennessReshaped, axis=1)[:, np.newaxis] + 10**-8)
-# testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000, 201))
-# testBinnedOpennessReshaped = np.swapaxes(testBinnedOpennessReshaped, 1, 2)
-# testBinnedOpennessReshaped.shape # should be (200, 201, 2000)
-# X = np.reshape(testBinnedOpennessReshaped, (200*201, 2000))
-#
-# print("Loading gene expression data")
-# Y = np.genfromtxt("data/pairedData/human/testGeneExpression.txt", delimiter = '\t')
-
-
-# #Linear Regression Baseline
-# epsilon = 10 ** -8
-# Y = np.log(Y + epsilon)
-# Y_mean = Y - np.mean(Y, axis=1)[:,np.newaxis]
-# Y = Y_mean / (np.std(Y_mean, axis=1)[:,np.newaxis] + 10**-8)
-# Y = np.reshape(Y, (200*201, 1))
-# input_size = 2000
-# output_size = 1
-
-def get_training_data(X_path="data/pairedData/human/testBinnedOpennessReshaped.npy",
-						Y_path="data/pairedData/human/testGeneExpression.txt"):
-
-	"""Loads openness and expression training data for the first 201 samples
-
-	Args:
-		X_path (str): path to binned openness data
-		Y_path (str): path to gene expression data
-	"""
-	print("Loading binned openness data")
-	# load binned openness data
-	testBinnedOpennessReshaped = np.load(X_path)
-	testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000, 201)) # original shape
-	testBinnedOpennessReshaped = np.swapaxes(testBinnedOpennessReshaped, 1, 2)
-	# testBinnedOpennessReshaped.shape should be (200, 201, 2000)
-	# 200 genes * 201 samples = 40200 inputs * 2000 1kb bins
-	X = np.reshape(testBinnedOpennessReshaped, (200*201, 2000))
-	print("Loading gene expression data")
-	Y = np.genfromtxt(Y_path, delimiter = '\t')
-	epsilon = 10 ** -8
-	# use log scale for gene expression
-	Y = np.log(Y + epsilon)
-	Y = np.reshape(Y, (200*201, 1))
-
-	################################################
-	print("Loading binned openness data")
-	testBinnedOpennessReshaped = np.load("data/pairedData/human/testBinnedOpennessReshaped.npy")
-	testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000, 201)) # original shape
-	testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000*201))
-	testBinnedOpennessReshaped_mean = (testBinnedOpennessReshaped - np.mean(testBinnedOpennessReshaped, axis=1)[:, np.newaxis])
-	testBinnedOpennessReshaped = testBinnedOpennessReshaped_mean/(np.std(testBinnedOpennessReshaped, axis=1)[:, np.newaxis] + 10**-8)
-	testBinnedOpennessReshaped = np.reshape(testBinnedOpennessReshaped, (200, 2000, 201))
-	testBinnedOpennessReshaped = np.swapaxes(testBinnedOpennessReshaped, 1, 2)
-	testBinnedOpennessReshaped.shape # should be (200, 201, 2000)
-	X = np.reshape(testBinnedOpennessReshaped, (200*201, 2000))
-
-	print("Loading gene expression data")
-	Y = np.genfromtxt("data/pairedData/human/testGeneExpression.txt", delimiter = '\t')
-	epsilon = 10 ** -8
-	Y = np.log(Y + epsilon)
-	Y_mean = Y - np.mean(Y, axis=1)[:,np.newaxis]
-	Y = Y_mean / (np.std(Y_mean, axis=1)[:,np.newaxis] + 10**-8)
-	Y = np.reshape(Y, (200*201, 1))
-
-	return X, Y
+input_size = 2000
 
 
 class Model(nn.Module):
-	""" N-layer neural network """
-
 	def __init__(self, input_size, inputLayerArray):
 		"""Initializes model variables and layer weights in the model
 
@@ -152,11 +85,6 @@ class DataLoader():
 		return
 
 	def Next(self):
-		# with open(ff_name, "a") as ff:
-		# 	print('#################################', file = ff)
-		# 	print('file index: %d'%self.file_index, file = ff)
-		# 	print('train index: %d'%self.train_index, file = ff)
-
 		if self.dev:
 			data_X = np.load(self.X_path + 'Dev.npy')
 			data_Y = np.load(self.Y_path + 'Dev.npy')
@@ -200,39 +128,8 @@ class DataLoader():
 	def GetEpoch(self):
 		return self.epoch_num
 
-class L1_Model(nn.Module):
-	""" N-layer neural network """
 
-	def __init__(self, input_size):
-		"""Initializes model variables and layer weights in the model
-
-		Args:
-			input_size (int): size of input
-			inputLayerArray (list of ints): each element specifies the number of neurons in a given layer.
-		"""
-		super(L1_Model, self).__init__()
-
-
-		self.hidden = nn.Linear(input_size, 1)
-		nn.init.xavier_uniform_(self.hidden.weight)
-
-
-	def forward(self, X):
-		"""Runs input forward through all layers
-
-		Args:
-			X (torch.Tensor): input to model
-		Returns:
-			out (torch.Tensor): output from model
-		"""
-
-		return self.hidden(X)
-
-
-
-
-
-def run_training(num_epochs = 5000, batch_size=10000):
+def run_training(num_epochs = 300, batch_size=10000):
 	"""Runs training specified number of epochs using an Adam
 	optimizer and MSE loss.
 
@@ -246,114 +143,70 @@ def run_training(num_epochs = 5000, batch_size=10000):
 	# X = torch.from_numpy(X).float()
 	# Y = torch.from_numpy(Y).float()
 
-	input_size = 2000
-
 	#defines what the input of each layer should be. Make sure the last element is 1.
 	# inputLayerArray = [1000,1000,1000,1]
 
 	with open(ff_name, "a") as ff:
 		print("Loading model", file = ff)
-	data_loader = DataLoader(type='train', batch_size=batch_size)
+	train_data_loader = DataLoader(type='train', batch_size=batch_size)
+	dev_data_loader = DataLoader(type='dev', batch_size=batch_size)
 	model = Model(input_size=input_size, inputLayerArray= inputLayerArray)
 	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
 	loss = nn.MSELoss()
 	error_array = np.zeros(num_epochs)
+	lastEpoch = train_data_loader.GetEpoch()
+	totalbatchMSE = 0
+	numofbatches = 0
 
-
-	lastEpoch = data_loader.GetEpoch()
-	while data_loader.GetEpoch()<num_epochs:
+	while train_data_loader.GetEpoch()<num_epochs:
 		optimizer.zero_grad()
-		X,Y = data_loader.Next()
+		X,Y = train_data_loader.Next()
 		X = torch.from_numpy(X).float()
 		Y = torch.from_numpy(Y).float()
 		Y_hat = model.run_all_forward(X)
-		error = loss(Y_hat, Y)
-		error.backward()
+		train_error = loss(Y_hat, Y)
+
+		totalbatchMSE = totalbatchMSE + train_error
+		numofbatches = numofbatches + 1
+
+		train_error.backward()
 		optimizer.step()
-		if data_loader.GetEpoch() != lastEpoch:
+		if train_data_loader.GetEpoch() != lastEpoch:
+			#run dev MSE
+			X_d,Y_d = dev_data_loader.Next()
+			X_d = torch.from_numpy(X_d).float()
+			Y_d = torch.from_numpy(Y_d).float()
+			Y_d_hat = model.run_all_forward(X_d)
+			dev_error = loss(Y_d_hat, Y_d)
+
+			totalbatchMSE = totalbatchMSE/numofbatches
+
 			with open(ff_name, "a") as ff:
-				print("Epoch %d: Loss is %f" % (data_loader.GetEpoch(), error), file = ff)
-			error_array[data_loader.GetEpoch()] = error
-			lastEpoch = data_loader.GetEpoch()
-			np.savetxt("errorVsEpoch_onFullDataset.csv", error_array, delimiter=",")
-			torch.save(model.state_dict(), 'last_trained_model_onFullDataset')
+				print("Epoch %d: Train MSE is %f | Dev MSE is %f" % (train_data_loader.GetEpoch(), totalbatchMSE, dev_error), file = ff)
+
+			totalbatchMSE = 0
+			numofbatches = 0
+
+			error_array[train_data_loader.GetEpoch()-1] = train_error
+			lastEpoch = train_data_loader.GetEpoch()
+			# np.savetxt("errorVsEpoch_onFullDataset.csv", error_array, delimiter=",")
+			torch.save(model.state_dict(), 'last_trained_Full_Model')
+
+		if train_data_loader.GetEpoch()%5 == 0:
+			torch.save(model.state_dict(), './trainedModelCheckpoints/FullDatasetCheckpoint_%d'%train_data_loader.GetEpoch())
 
 	np.savetxt("errorVsEpoch_onFullDataset.csv", error_array, delimiter=",")
-	torch.save(model.state_dict(), 'last_trained_model_onFullDataset')
+	torch.save(model.state_dict(), 'last_trained_Full_Model')
 
 	# below is code to load.
 	# the_model = TheModelClass(*args, **kwargs)
 	# the_model.load_state_dict(torch.load(PATH))
 
-def run_L1_training(num_epochs = 5000, batch_size=1000):
-	"""Runs training specified number of epochs using an Adam
-	optimizer and MSE loss.
-
-	Args:
-		X (torch.Tensor): input tensor
-		Y (torch.Tensor): target tensor
-		num_epochs (int): number of training epochs
-	"""
-
-	input_size = 2000
-	#defines what the input of each layer should be. Make sure the last element is 1.
-
-	with open(ff_name, "a") as ff:
-		print("Loading model", file = ff)
-	data_loader = DataLoader(type='train', batch_size=batch_size)
-	model = L1_Model(input_size=input_size)
-	optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
-	loss = nn.MSELoss()
-	error_array = np.zeros(num_epochs)
-
-
-	lastEpoch = data_loader.GetEpoch()
-	while data_loader.GetEpoch()<num_epochs:
-		optimizer.zero_grad()
-		X,Y = data_loader.Next()
-		X = torch.from_numpy(X).float()
-		Y = torch.from_numpy(Y).float()
-		Y_hat = model.forward(X)
-		error = loss(Y_hat, Y)
-		regularization_loss = 0
-		for param in model.parameters():
-			regularization_loss += torch.sum(torch.abs(param))
-		error = error + regularization_loss
-		error.backward()
-		optimizer.step()
-		if data_loader.GetEpoch() != lastEpoch:
-			with open(ff_name, "a") as ff:
-				print("Epoch %d: Loss is %f" % (data_loader.GetEpoch(), error), file = ff)
-			error_array[data_loader.GetEpoch()] = error
-			lastEpoch = data_loader.GetEpoch()
-
-	np.savetxt("L1_errorVsEpoch_onFullDataset.csv", error_array, delimiter=",")
-	torch.save(model.state_dict(), 'L1_last_trained_model_onFullDataset')
-
-def testModel():
-	input_size = 2000
-	model = Model(input_size=input_size, inputLayerArray= inputLayerArray)
-	model.load_state_dict(torch.load(model_path))
-	model.eval()
-
-	loss = nn.MSELoss()
-	data_loader = DataLoader(type='dev')
-	X,Y = data_loader.Next()
-	X = torch.from_numpy(X).float()
-	Y = torch.from_numpy(Y).float()
-	Y_hat = model.forward(X)
-	error = loss(Y_hat, Y)
-	with open(ff_name, "a") as ff:
-		print("Dev Loss MSE Loss is %f" %error, file = ff)
-
-
 
 def main():
 	with open(ff_name, "a") as ff:
 		print('starting', file = ff)
-	# run_training()
-	# run_L1_training()
-	testModel()
+	run_training()
 
 
 if __name__ == "__main__":

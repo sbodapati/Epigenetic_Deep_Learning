@@ -175,7 +175,7 @@ def run_L1_training(num_epochs = 300, batch_size=10000):
 
             with open(ff_name, "a") as ff:
                 print("Epoch %d: Train MSE is %f | Dev MSE is %f" % (train_data_loader.GetEpoch(), train_error, dev_error), file = ff)
-            error_array[train_data_loader.GetEpoch()] = train_error
+            error_array[train_data_loader.GetEpoch()-1] = train_error
             lastEpoch = train_data_loader.GetEpoch()
             torch.save(model.state_dict(), 'last_trained_Lasso_Model_lam:%f'%lambd)
 
