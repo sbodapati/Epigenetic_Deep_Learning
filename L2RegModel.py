@@ -170,12 +170,12 @@ def run_L2_training(num_epochs = 300, batch_size=10000):
         Y = torch.from_numpy(Y).float()
         Y_hat = model.run_all_forward(X)
         train_error = loss(Y_hat, Y)
-
+        train_error_MSE = train_error
         all_linear2_params = torch.cat([x.view(-1) for x in model.parameters()])
         l2_reg = torch.norm(all_linear2_params, 2)
         train_error = train_error + l2_reg * lambd
 
-        totalOverallMSE = totalOverallMSE + train_error
+        totalOverallMSE = totalOverallMSE + train_error_MSE
         numofbatches = numofbatches + 1
 
         if train_data_loader.GetEpoch() != lastEpoch:
@@ -185,7 +185,6 @@ def run_L2_training(num_epochs = 300, batch_size=10000):
             Y_d = torch.from_numpy(Y_d).float()
             Y_d_hat = model.run_all_forward(X_d)
             dev_error = loss(Y_d_hat, Y_d)
-            dev_error = dev_error + l2_reg * lambd
 
             totalOverallMSE = totalOverallMSE/numofbatches
 
