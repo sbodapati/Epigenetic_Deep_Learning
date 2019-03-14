@@ -155,7 +155,7 @@ def run_L1_training(num_epochs = 300, batch_size=10000):
         Y = torch.from_numpy(Y).float()
         Y_hat = model.forward(X)
         train_error = loss(Y_hat, Y)
-
+        train_error_MSE = train_error
         all_linear1_params = torch.cat([x.view(-1) for x in model.parameters()])
         l1_reg = torch.norm(all_linear1_params, 1)
 
@@ -168,13 +168,14 @@ def run_L1_training(num_epochs = 300, batch_size=10000):
             Y_d = torch.from_numpy(Y_d).float()
             Y_d_hat = model.forward(X_d)
             dev_error = loss(Y_d_hat, Y_d)
+            dev_error_MSE = dev_error
             dev_error = dev_error + l1_reg * lambd
 
             lastMSE = currentMSE
             currentMSE = dev_error
 
             with open(ff_name, "a") as ff:
-                print("Epoch %d: Train MSE is %f | Dev MSE is %f" % (train_data_loader.GetEpoch(), train_error, dev_error), file = ff)
+                print("Epoch %d: Train MSE is %f | Dev MSE is %f" % (train_data_loader.GetEpoch(), train_error_MSE, dev_error_MSE), file = ff)
             error_array[train_data_loader.GetEpoch()-1] = train_error
             lastEpoch = train_data_loader.GetEpoch()
             torch.save(model.state_dict(), 'last_trained_Lasso_Model_lam:%f'%lambd)
