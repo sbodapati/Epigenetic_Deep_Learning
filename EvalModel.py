@@ -166,21 +166,27 @@ def run_eval(num_epochs = 500, batch_size=10000):
     model.eval()
     test_size = test_data_loader.GetTestSize()
     exp_array = np.zeros((test_size,2))
+    mse_array = np.zeros(test_size)
     index = 0
+    loss = nn.MSELoss()
+
     while index < test_size:
         X,Y = test_data_loader.Next()
         X = torch.from_numpy(X).float()
         Y = torch.from_numpy(Y).float()
         Y_hat = model.run_all_forward(X)
-
+        mse = loss(Y_hat, Y)
+        mse_array[index] = mse
 
         with open(ff_name, "a") as ff:
-            print("Epoch %d: Actual Exp - %f | Predicted Exp - %f" % (index, Y, Y_hat), file = ff)
+            print("Epoch %d: Actual Exp - %f | Predicted Exp - %f | MSE - %f" % (index, Y, Y_hat, mse), file = ff)
 
         exp_array[index, 0] = Y
         exp_array[index, 1] = Y_hat
+        index = index + 1
 
-    np.savetxt("Eval_no_reg.csv", exp_array, delimiter=",")
+    np.savetxt("./EvalResults/Eval_no_reg.csv", exp_array, delimiter=",")
+    np.savetxt("./EvalResults/MSE_no_reg.csv", mse_array, delimiter=",")
 
 def main():
     with open(ff_name, "a") as ff:
