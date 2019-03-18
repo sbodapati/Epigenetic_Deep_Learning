@@ -1,0 +1,2 @@
+opening L1_reg_Training_out_with_lambda:2.000000.txt
+starting

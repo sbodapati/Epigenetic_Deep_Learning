@@ -1,0 +1,3 @@
+opening FullModel_Training_out.txt
+starting
+Loading model
