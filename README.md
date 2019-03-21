@@ -10,7 +10,7 @@ To start (assumes you have conda):
   * you should now have a directory that has './data/pairedData/.'
 * run 'python Analysis.py'
 
-## Files that should be in the /data folder:
+## Files that should be in the /data folder (this is on Sherlock):
 ./data/pairedData/human/Element_name.txt
 - A list of the chromatin locations. Shape = 184665, 1 
 
@@ -21,9 +21,6 @@ To start (assumes you have conda):
 ./data/pairedData/human/gene_ms.txt
 - Gene to Protein Expression. Index = genes. Columns = Cell Types. Shape = 17794,201
 - values = protein expression level
-
-./data/pairedData/human/RE_TG.txt
-- unclear, appears to be some mapping of chromatin position to gene (1 to many)
 
 ./data/pairedData/human/sample_201_new
 - list of all 201 cell types 
